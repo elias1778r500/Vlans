@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VLANs: redes locales virtuales — Informe técnico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --azul-900:#0b2a4a;
+  --azul-700:#12467a;
+  --azul-600:#1a5fa8;
+  --azul-500:#2a7ac4;
+  --azul-100:#e4eef8;
+  --azul-050:#f4f8fc;
+  --fondo:#ffffff;
+  --fondo-alt:#f4f8fc;
+  --texto:#16202b;
+  --texto-suave:#4c5b6b;
+  --borde:#cfdeee;
+  --ok:#1b7a4b;
+  --mal:#a32626;
+  --sombra:0 1px 2px rgba(11,42,74,.06), 0 6px 18px rgba(11,42,74,.07);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --azul-900:#cfe3f6;
+    --azul-700:#8fc0ec;
+    --azul-600:#6fadea;
+    --azul-500:#5c9fe0;
+    --azul-100:#17324c;
+    --azul-050:#122638;
+    --fondo:#0d1a26;
+    --fondo-alt:#122638;
+    --texto:#e8eff6;
+    --texto-suave:#a9bdd0;
+    --borde:#234563;
+    --ok:#5fd39a;
+    --mal:#f08b8b;
+    --sombra:0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --azul-900:#cfe3f6; --azul-700:#8fc0ec; --azul-600:#6fadea; --azul-500:#5c9fe0;
+  --azul-100:#17324c; --azul-050:#122638; --fondo:#0d1a26; --fondo-alt:#122638;
+  --texto:#e8eff6; --texto-suave:#a9bdd0; --borde:#234563;
+  --ok:#5fd39a; --mal:#f08b8b;
+  --sombra:0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--fondo); color:var(--texto);
+  font-family:"Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size:17px; line-height:1.65;
+}
+img{max-width:100%}
+.contenedor{max-width:860px; margin:0 auto; padding:0 20px}
+
+/* ---------- Encabezado ---------- */
+header.sitio{
+  background:linear-gradient(160deg, var(--azul-900), var(--azul-700));
+  color:#fff; padding:44px 0 38px; border-bottom:4px solid var(--azul-500);
+}
+:root[data-theme="dark"] header.sitio, html:not([data-theme="light"]) header.sitio{}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) header.sitio{background:linear-gradient(160deg,#0a1c2c,#123350)}
+}
+header.sitio .institucion{
+  font-size:.78rem; letter-spacing:.09em; text-transform:uppercase;
+  opacity:.85; margin-bottom:14px; border-left:3px solid rgba(255,255,255,.5); padding-left:10px;
+}
+header.sitio h1{font-size:2.1rem; line-height:1.2; margin:0 0 10px; font-weight:700; color:#fff}
+header.sitio p.bajada{margin:0; font-size:1.05rem; opacity:.92; max-width:62ch}
+header.sitio .meta{margin-top:20px; font-size:.85rem; opacity:.8}
+
+/* ---------- Índice ---------- */
+nav.indice{background:var(--azul-050); border-bottom:1px solid var(--borde); padding:14px 0}
+nav.indice ol{margin:0; padding:0; list-style:none; display:flex; flex-wrap:wrap; gap:8px 18px; font-size:.9rem}
+nav.indice a{color:var(--azul-700); text-decoration:none; border-bottom:1px solid transparent}
+nav.indice a:hover{border-bottom-color:var(--azul-600)}
+
+/* ---------- Secciones ---------- */
+main{padding:10px 0 60px}
+section{padding:36px 0 10px; border-bottom:1px solid var(--borde)}
+section:last-of-type{border-bottom:none}
+h2{
+  font-size:1.5rem; color:var(--azul-700); margin:0 0 6px; line-height:1.25;
+  display:flex; align-items:baseline; gap:12px;
+}
+h2 .num{
+  font-family:"IBM Plex Mono", monospace; font-size:.85rem; color:#fff;
+  background:var(--azul-600); border-radius:4px; padding:3px 8px; flex:none;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) h2 .num{color:#0d1a26}}
+:root[data-theme="dark"] h2 .num{color:#0d1a26}
+h3{font-size:1.12rem; color:var(--azul-700); margin:26px 0 6px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px; padding-left:22px}
+li{margin-bottom:6px}
+strong{color:var(--texto)}
+code{
+  font-family:"IBM Plex Mono", monospace; font-size:.88em;
+  background:var(--azul-100); color:var(--azul-700); padding:1px 5px; border-radius:3px;
+}
+
+/* ---------- Bloques auxiliares ---------- */
+.analogia{
+  background:var(--azul-050); border-left:4px solid var(--azul-500);
+  padding:16px 18px; border-radius:0 6px 6px 0; margin:18px 0;
+}
+.analogia .etiqueta{
+  font-size:.72rem; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--azul-600); font-weight:700; display:block; margin-bottom:6px;
+}
+.analogia p:last-child{margin-bottom:0}
+.nota{
+  border:1px solid var(--borde); background:var(--fondo-alt);
+  padding:14px 16px; border-radius:6px; margin:18px 0; font-size:.95rem;
+}
+.nota p:last-child{margin-bottom:0}
+
+/* ---------- Tablas ---------- */
+.tabla-wrap{overflow-x:auto; margin:18px 0; border:1px solid var(--borde); border-radius:6px}
+table{border-collapse:collapse; width:100%; font-size:.94rem; min-width:520px}
+th,td{padding:10px 14px; text-align:left; border-bottom:1px solid var(--borde); vertical-align:top}
+thead th{background:var(--azul-100); color:var(--azul-700); font-weight:700; font-size:.88rem}
+tbody tr:last-child td{border-bottom:none}
+tbody th{background:var(--fondo-alt); font-weight:600; width:26%}
+
+/* ---------- Diagrama de trama ---------- */
+.trama{overflow-x:auto; margin:20px 0; padding-bottom:6px}
+.trama-fila{display:flex; min-width:600px; border-radius:5px; overflow:hidden; border:1px solid var(--borde)}
+.campo{
+  flex:1; padding:12px 8px; text-align:center; font-size:.78rem; line-height:1.35;
+  border-right:1px solid var(--borde); background:var(--fondo-alt); color:var(--texto-suave);
+}
+.campo:last-child{border-right:none}
+.campo b{display:block; font-size:.86rem; color:var(--texto); font-weight:600}
+.campo.tag{background:var(--azul-600); color:#fff; flex:1.5}
+.campo.tag b{color:#fff}
+.trama-titulo{font-size:.8rem; color:var(--texto-suave); margin-bottom:6px; font-family:"IBM Plex Mono",monospace}
+.tci{display:flex; min-width:600px; margin-top:8px; border:1px dashed var(--azul-500); border-radius:5px; overflow:hidden}
+.tci .campo{background:var(--azul-050)}
+
+/* ---------- Ventajas ---------- */
+.rejilla{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin:18px 0}
+.tarjeta{
+  border:1px solid var(--borde); border-top:3px solid var(--azul-600);
+  background:var(--fondo-alt); border-radius:6px; padding:16px; box-shadow:var(--sombra);
+}
+.tarjeta h4{margin:0 0 6px; font-size:1rem; color:var(--azul-700)}
+.tarjeta p{margin:0; font-size:.93rem; color:var(--texto-suave)}
+
+/* ---------- Enlaces ---------- */
+ul.fuentes{list-style:none; padding:0}
+ul.fuentes li{
+  border:1px solid var(--borde); border-radius:6px; padding:14px 16px;
+  margin-bottom:10px; background:var(--fondo-alt);
+}
+ul.fuentes a{color:var(--azul-600); font-weight:600; text-decoration:none; word-break:break-word}
+ul.fuentes a:hover{text-decoration:underline}
+ul.fuentes .desc{display:block; font-size:.9rem; color:var(--texto-suave); margin-top:4px}
+ul.fuentes .org{
+  font-size:.7rem; letter-spacing:.08em; text-transform:uppercase; font-weight:700;
+  color:var(--azul-700); background:var(--azul-100); padding:2px 7px; border-radius:3px; margin-right:8px;
+}
+
+/* ---------- Cuestionario ---------- */
+#quiz{background:var(--azul-050); border:1px solid var(--borde); border-radius:8px; padding:26px 22px; margin-top:30px}
+.pregunta{margin-bottom:22px; padding-bottom:18px; border-bottom:1px dashed var(--borde)}
+.pregunta:last-of-type{border-bottom:none}
+.pregunta .enunciado{font-weight:600; margin-bottom:10px; display:block}
+.pregunta .enunciado .n{
+  font-family:"IBM Plex Mono",monospace; color:var(--azul-600); margin-right:6px;
+}
+.opcion{display:block; padding:8px 12px; border:1px solid var(--borde); border-radius:5px;
+  margin-bottom:7px; cursor:pointer; background:var(--fondo); font-size:.95rem; transition:border-color .15s}
+.opcion:hover{border-color:var(--azul-500)}
+.opcion input{margin-right:9px; accent-color:var(--azul-600)}
+.opcion.correcta{border-color:var(--ok); background:rgba(27,122,75,.08)}
+.opcion.incorrecta{border-color:var(--mal); background:rgba(163,38,38,.08)}
+.retro{font-size:.9rem; margin-top:8px; padding-left:4px; display:none}
+.retro.visible{display:block}
+.retro .bien{color:var(--ok); font-weight:600}
+.retro .mal{color:var(--mal); font-weight:600}
+button{
+  font-family:inherit; font-size:1rem; font-weight:600; cursor:pointer;
+  background:var(--azul-600); color:#fff; border:none; border-radius:6px; padding:12px 22px;
+}
+button:hover{background:var(--azul-700)}
+button.secundario{background:transparent; color:var(--azul-600); border:1px solid var(--azul-600)}
+button.secundario:hover{background:var(--azul-100)}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) button{color:#0d1a26}
+  :root:not([data-theme="light"]) button.secundario{color:var(--azul-600)}
+}
+:root[data-theme="dark"] button{color:#0d1a26}
+:root[data-theme="dark"] button.secundario{color:var(--azul-600)}
+#resultado{display:none; margin-top:24px; padding:20px; background:var(--fondo);
+  border:2px solid var(--azul-600); border-radius:8px; text-align:center}
+#resultado.visible{display:block}
+#calificacion{font-size:3rem; font-weight:700; color:var(--azul-600); line-height:1; margin:6px 0}
+#detalle-resultado{color:var(--texto-suave); font-size:.95rem; margin-bottom:0}
+#envio{margin-top:22px; padding-top:20px; border-top:1px solid var(--borde); text-align:left}
+#envio label{display:block; font-weight:600; font-size:.92rem; margin-bottom:6px}
+.fila-envio{display:flex; flex-wrap:wrap; gap:10px}
+#correo, #nombre, #matricula{
+  flex:1 1 220px; padding:11px 13px; font-family:inherit; font-size:.97rem;
+  border:1px solid var(--borde); border-radius:6px; background:var(--fondo); color:var(--texto);
+}
+#correo:focus, #nombre:focus, #matricula:focus{outline:2px solid var(--azul-500); outline-offset:1px}
+#aviso-envio{font-size:.85rem; color:var(--texto-suave); margin:10px 0 0}
+.acciones{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+
+footer.sitio{
+  background:var(--azul-900); color:#dce9f6; padding:26px 0; font-size:.85rem;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) footer.sitio{background:#0a1c2c; color:#a9bdd0}
+}
+:root[data-theme="dark"] footer.sitio{background:#0a1c2c; color:#a9bdd0}
+footer.sitio p{margin:0 0 4px}
+@media (max-width:600px){
+  body{font-size:16px}
+  header.sitio h1{font-size:1.65rem}
+  h2{font-size:1.3rem; flex-direction:column; gap:6px}
+  h2 .num{align-self:flex-start}
+}
+</style>
+</head>
+<body>
+
+<header class="sitio">
+  <div class="contenedor">
+    <div class="institucion">
+      Universidad Politécnica del Estado de Guerrero · Ingeniería en Tecnologías de la Información e Innovación Digital
+    </div>
+    <h1>VLANs: dividir una red física en varias redes lógicas</h1>
+    <p class="bajada">Informe técnico sobre redes locales virtuales: qué son, cómo el estándar IEEE 802.1Q etiqueta las tramas, en qué se diferencian los puertos de acceso y los troncales, y por qué la segmentación es una herramienta de seguridad.</p>
+    <p class="meta">Elías Bahena Corral · Matrícula 25150021 · Ing. Marco Antonio Valois Flores</p>
+  </div>
+</header>
+
+<nav class="indice">
+  <div class="contenedor">
+    <ol>
+      <li><a href="#s1">1. Qué es una VLAN</a></li>
+      <li><a href="#s2">2. El problema que resuelve</a></li>
+      <li><a href="#s3">3. IEEE 802.1Q y el etiquetado</a></li>
+      <li><a href="#s4">4. Puertos de acceso y troncales</a></li>
+      <li><a href="#s5">5. Seguridad y segmentación</a></li>
+      <li><a href="#s6">6. Documentación oficial</a></li>
+      <li><a href="#s7">7. Cuestionario</a></li>
+    </ol>
+  </div>
+</nav>
+
+<main class="contenedor">
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <h2><span class="num">01</span> Qué es una VLAN y para qué sirve</h2>
+
+  <p>Una <strong>VLAN</strong> (<em>Virtual Local Area Network</em>, red de área local virtual) es una red local que existe por configuración del switch y no por el cableado. Los equipos que pertenecen a la misma VLAN se comportan como si estuvieran conectados al mismo switch aislado, aunque físicamente estén repartidos por todo el edificio; y dos equipos conectados al mismo switch, en puertos contiguos, no pueden hablarse si están en VLANs distintas.</p>
+
+  <p>El <strong>objetivo principal</strong> es separar el tráfico en grupos lógicos independientes sobre una única infraestructura física. En términos técnicos: una VLAN es un <strong>dominio de difusión</strong> (<em>broadcast domain</em>) separado, creado en la <strong>capa 2</strong> del modelo OSI, la capa de enlace de datos.</p>
+
+  <div class="analogia">
+    <span class="etiqueta">Ejemplo</span>
+    <p>Un edificio universitario tiene un solo switch por piso y un solo tendido de cable. Sin VLANs, la computadora de Control Escolar, la de un laboratorio de cómputo y el punto de acceso Wi-Fi para alumnos están todos en la misma red: cualquiera puede intentar alcanzar al servidor de calificaciones.</p>
+    <p>Con VLANs se definen tres redes lógicas sobre ese mismo cable: <code>VLAN 10 – Administrativo</code>, <code>VLAN 20 – Laboratorios</code> y <code>VLAN 30 – Wi-Fi alumnos</code>. No se compró hardware nuevo ni se tendió cable adicional; se configuró a qué VLAN pertenece cada puerto del switch. A partir de ahí, el tráfico de alumnos y el administrativo son mundos separados.</p>
+  </div>
+
+  <p>De ahí se desprenden los objetivos concretos que persigue un administrador al desplegar VLANs:</p>
+  <ul>
+    <li><strong>Agrupar por función, no por ubicación.</strong> Los cuatro empleados de contabilidad pueden estar en pisos distintos y seguir compartiendo la misma VLAN.</li>
+    <li><strong>Reducir el tamaño de los dominios de difusión</strong> para que el tráfico de broadcast no inunde toda la red.</li>
+    <li><strong>Aislar tráfico sensible</strong> del tráfico general.</li>
+    <li><strong>Ganar flexibilidad administrativa:</strong> mover un equipo de red es cambiar un parámetro de configuración, no recablear.</li>
+  </ul>
+
+  <div class="nota">
+    <p><strong>Punto clave:</strong> dos equipos en VLANs distintas no pueden comunicarse solo con el switch. Para que lo hagan hace falta un dispositivo de capa 3 (un router o un switch multicapa) que haga <em>enrutamiento entre VLANs</em>. Ese es precisamente el punto donde se pueden aplicar reglas y filtros.</p>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <h2><span class="num">02</span> El problema que las VLANs vienen a resolver</h2>
+
+  <p>Para entender por qué existen las VLANs conviene recordar cómo trabaja un switch sin ellas.</p>
+
+  <p>Un switch aprende qué dirección MAC está detrás de cada puerto y reenvía cada trama solo al puerto correcto. Pero cuando una trama va dirigida a <strong>todos</strong> (una difusión o <em>broadcast</em>), el switch la copia a todos sus puertos. Y el tráfico de broadcast es constante en cualquier red: peticiones ARP para averiguar la MAC de una IP, solicitudes DHCP de equipos que acaban de encenderse, anuncios de descubrimiento de impresoras y servicios.</p>
+
+  <p>En una red plana de 300 equipos, cada una de esas difusiones llega a los 300. Esto produce tres efectos:</p>
+  <ol>
+    <li><strong>Desperdicio de ancho de banda:</strong> tramas que se copian a puertos donde a nadie le interesan.</li>
+    <li><strong>Carga de procesamiento:</strong> cada computadora debe examinar cada broadcast y descartarlo.</li>
+    <li><strong>Exposición:</strong> quien conecte una laptop a cualquier toma de red ve el tráfico de difusión de toda la organización y puede intentar alcanzar cualquier equipo.</li>
+  </ol>
+
+  <p>La solución clásica era comprar switches separados y un router entre ellos: caro, rígido y limitado por la ubicación física. La VLAN logra exactamente lo mismo por software. <strong>Una VLAN equivale a un switch independiente</strong>, con la ventaja de que puede abarcar varios switches del edificio y reconfigurarse en minutos.</p>
+
+  <div class="analogia">
+    <span class="etiqueta">Ejemplo</span>
+    <p>Una laptop de alumno se enciende en el laboratorio y lanza una petición DHCP en difusión. Con la red plana, esa petición llega hasta las computadoras de la dirección administrativa. Con VLANs, no sale de la <code>VLAN 20</code>: la reciben únicamente los equipos del laboratorio y el servidor DHCP que atiende esa VLAN.</p>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <h2><span class="num">03</span> El estándar IEEE 802.1Q y el etiquetado de tramas</h2>
+
+  <p>Si las VLANs solo existieran dentro de un switch, bastaría con que ese switch recordara qué puerto pertenece a cada VLAN. El problema aparece cuando una trama debe pasar de un switch a otro por un único cable: el switch receptor no tiene forma de saber a qué VLAN pertenecía. Hace falta que la trama <strong>lleve escrita esa información</strong>.</p>
+
+  <p>Eso es lo que estandariza <strong>IEEE 802.1Q</strong>, conocido coloquialmente como <em>dot1Q</em>. Es el estándar de red que da soporte a las VLANs sobre redes Ethernet IEEE 802.3: define un sistema de etiquetado de tramas Ethernet y los procedimientos que los puentes y switches deben seguir para manejar esas tramas. La revisión vigente del documento es IEEE 802.1Q-2018, que especifica cómo los puentes y las VLAN Bridges soportan el servicio MAC, incluyendo su gestión, protocolos y algoritmos, y que sustituyó a la edición 802.1Q-2014.</p>
+
+  <h3>Cómo funciona el etiquetado (<em>tagging</em>)</h3>
+
+  <p>802.1Q no encapsula la trama original: inserta 4 bytes adicionales en la cabecera Ethernet y cambia el campo EtherType a <code>0x8100</code> para señalar el cambio de formato. Esos 4 bytes se colocan justo después de las direcciones MAC de destino y origen, y desplazan el resto de la trama.</p>
+
+  <div class="trama">
+    <p class="trama-titulo">Trama Ethernet con etiqueta 802.1Q</p>
+    <div class="trama-fila">
+      <div class="campo"><b>MAC destino</b>6 bytes</div>
+      <div class="campo"><b>MAC origen</b>6 bytes</div>
+      <div class="campo tag"><b>Etiqueta 802.1Q</b>4 bytes insertados</div>
+      <div class="campo"><b>EtherType / Long.</b>2 bytes</div>
+      <div class="campo"><b>Datos</b>46–1500 bytes</div>
+      <div class="campo"><b>FCS</b>4 bytes</div>
+    </div>
+    <p class="trama-titulo" style="margin-top:14px">Interior de los 4 bytes de la etiqueta</p>
+    <div class="tci">
+      <div class="campo"><b>TPID = 0x8100</b>16 bits · marca que la trama va etiquetada</div>
+      <div class="campo"><b>PCP</b>3 bits · prioridad (QoS, 802.1p)</div>
+      <div class="campo"><b>DEI</b>1 bit · trama descartable si hay congestión</div>
+      <div class="campo"><b>VID</b>12 bits · identificador de VLAN</div>
+    </div>
+  </div>
+
+  <p>Los tres últimos campos (PCP, DEI y VID) forman en conjunto el <em>Tag Control Information</em> o TCI. El campo decisivo es el <strong>VID</strong>: con sus 12 bits admite 4096 combinaciones, de las cuales los valores 0 y 4095 están reservados, de modo que el rango útil de identificadores de VLAN va de <strong>1 a 4094</strong>.</p>
+
+  <p>El otro campo relevante en la práctica es el <strong>PCP</strong>: el estándar incluye un esquema de priorización de calidad de servicio conocido comúnmente como IEEE 802.1p. Gracias a él, una trama de telefonía IP puede marcarse con mayor prioridad que una descarga de archivos y el switch la atenderá antes en sus colas de salida.</p>
+
+  <p>Dos consecuencias técnicas de insertar esos bytes:</p>
+  <ul>
+    <li>El <strong>FCS</strong> (secuencia de verificación de trama) debe recalcularse, porque la trama ya no es la misma que salió del equipo emisor.</li>
+    <li>La trama crece 4 bytes, así que el tamaño máximo pasa de 1518 a <strong>1522 bytes</strong>. Un equipo antiguo que no entienda 802.1Q podría descartarla por considerarla demasiado grande (<em>baby giant</em>).</li>
+  </ul>
+
+  <h3>Dónde se pone y dónde se quita la etiqueta</h3>
+
+  <p>Esto es lo que suele costar más trabajo entender, y en realidad es sencillo: <strong>la etiqueta solo existe entre switches</strong>. Las computadoras nunca la ven.</p>
+
+  <ol>
+    <li>La PC envía una trama Ethernet normal, sin etiqueta.</li>
+    <li>El switch la recibe en un puerto asignado a la VLAN 20 y, si debe reenviarla a otro switch, <strong>inserta</strong> la etiqueta con <code>VID = 20</code>.</li>
+    <li>La trama viaja por el enlace entre switches con su etiqueta puesta, mezclada con tramas de otras VLANs pero perfectamente distinguible.</li>
+    <li>El switch de destino lee <code>VID = 20</code>, <strong>retira</strong> la etiqueta y entrega la trama original al equipo destinatario.</li>
+  </ol>
+
+  <div class="analogia">
+    <span class="etiqueta">Ejemplo</span>
+    <p>Es el mismo principio que la correspondencia interna de una institución. Un profesor entrega un sobre sin más datos; en la oficina de correspondencia le pegan una etiqueta que dice «Departamento de Sistemas». Todos los sobres viajan juntos en la misma valija hacia el otro edificio, pero al llegar se reparten según la etiqueta, y quien recibe el sobre lo abre sin la etiqueta encima: solo sirvió durante el trayecto.</p>
+  </div>
+
+  <div class="nota">
+    <p><strong>Punto clave:</strong> la etiqueta no dice quién envía ni a quién va dirigida la trama; eso ya lo indican las direcciones MAC. La etiqueta dice únicamente <em>a qué red lógica pertenece</em>, y es lo que permite que un solo cable transporte varias VLANs sin mezclarlas.</p>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <h2><span class="num">04</span> Puertos de acceso y puertos troncales</h2>
+
+  <p>Todo lo anterior se traduce en una decisión concreta por cada puerto del switch: ¿este puerto lleva una sola VLAN o varias? De ahí salen los dos modos fundamentales.</p>
+
+  <h3>Puerto de acceso (<em>access port</em>)</h3>
+  <p>Es el puerto donde se conecta un <strong>dispositivo final</strong>: una computadora, una impresora, una cámara IP, un punto de acceso Wi-Fi. Pertenece a <strong>una sola VLAN</strong> y trabaja con tramas <strong>sin etiqueta</strong>. El equipo conectado no sabe —ni necesita saber— que las VLANs existen.</p>
+  <p>El switch hace dos cosas en este puerto: al recibir una trama, la asocia internamente a la VLAN configurada; al enviar una trama hacia el equipo, retira cualquier etiqueta antes de entregarla.</p>
+
+  <h3>Puerto troncal (<em>trunk port</em>)</h3>
+  <p>Es el puerto que conecta el switch con <strong>otro dispositivo de red</strong>: otro switch, un router o un servidor virtualizado. Un troncal es un enlace punto a punto entre una o más interfaces Ethernet y otro dispositivo de red; los troncales Ethernet transportan el tráfico de múltiples VLANs sobre un solo enlace, lo que permite extender las VLANs por toda la red. Aquí sí circulan tramas <strong>etiquetadas</strong>, y el switch usa el VID para decidir a qué VLAN pertenece cada una.</p>
+
+  <p>Sin troncales, cada VLAN necesitaría su propio cable entre switch y switch: tres VLANs, tres cables. Con un troncal basta un cable para todas.</p>
+
+  <h3>La VLAN nativa</h3>
+  <p>Hay una excepción dentro del troncal. Un puerto troncal configurado con etiquetado 802.1Q puede recibir tanto tráfico etiquetado como no etiquetado; por omisión el dispositivo reenvía el tráfico sin etiqueta en la VLAN nativa configurada para ese puerto, que por defecto es la VLAN 1. La VLAN nativa puede tener cualquier identificador, y si un paquete lleva un VID igual al de la VLAN nativa del puerto de salida, se envía sin etiqueta; en caso contrario el switch lo envía etiquetado.</p>
+  <p>La VLAN nativa existe por compatibilidad con equipos que no entienden 802.1Q. Es también una fuente frecuente de errores: para establecer un troncal 802.1Q ambos extremos deben tener la misma VLAN nativa, porque la encapsulación aún no está establecida y los dos switches necesitan entenderse sobre un enlace sin encapsular. Si los extremos no coinciden, el tráfico sin etiqueta termina en la VLAN equivocada.</p>
+
+  <div class="tabla-wrap">
+    <table>
+      <thead>
+        <tr><th></th><th>Puerto de acceso</th><th>Puerto troncal</th></tr>
+      </thead>
+      <tbody>
+        <tr><th>Se conecta a</th><td>Dispositivo final (PC, impresora, teléfono IP, AP)</td><td>Otro switch, un router o un servidor de virtualización</td></tr>
+        <tr><th>VLANs que transporta</th><td>Una sola</td><td>Varias (potencialmente todas)</td></tr>
+        <tr><th>Etiquetado</th><td>Tramas sin etiqueta</td><td>Tramas etiquetadas 802.1Q (salvo la VLAN nativa)</td></tr>
+        <tr><th>Al recibir</th><td>Asigna la trama a la VLAN del puerto</td><td>Lee el VID de la etiqueta</td></tr>
+        <tr><th>Al transmitir</th><td>Retira la etiqueta</td><td>Inserta la etiqueta correspondiente</td></tr>
+        <tr><th>El equipo conectado</th><td>Desconoce que existen VLANs</td><td>Debe entender 802.1Q</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="analogia">
+    <span class="etiqueta">Ejemplo</span>
+    <p>Pensemos en un edificio con dos switches. En el switch A, el puerto 3 es de acceso en la VLAN 10 (ahí está la PC de Control Escolar) y el puerto 8 es de acceso en la VLAN 30 (ahí está el AP del Wi-Fi de alumnos). El puerto 24 del switch A es troncal y va al switch B del otro edificio.</p>
+    <p>Cuando la PC de Control Escolar manda datos a un servidor del otro edificio, el switch A recibe la trama sin etiqueta por el puerto 3, le pone <code>VID = 10</code>, la saca por el troncal, y el switch B la entrega sin etiqueta por el puerto de acceso donde está el servidor. Por ese mismo cable troncal, al mismo tiempo, viajan tramas con <code>VID = 30</code> del Wi-Fi de alumnos: comparten el cable, no la red.</p>
+  </div>
+
+  <p>Conviene mencionar un tercer caso habitual: el <strong>puerto con VLAN de voz</strong>. Cuando una computadora se conecta detrás de un teléfono IP, el puerto se configura con una VLAN de acceso para los datos de la PC y una VLAN de voz etiquetada para el teléfono. Es un híbrido pensado específicamente para telefonía.</p>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <h2><span class="num">05</span> Ventajas en seguridad y segmentación</h2>
+
+  <p>La segmentación en VLANs no es únicamente una cuestión de rendimiento. Es uno de los controles de seguridad más básicos y efectivos de una red corporativa, porque reduce lo que un atacante —o un equipo infectado— puede alcanzar.</p>
+
+  <div class="rejilla">
+    <div class="tarjeta">
+      <h4>Aislamiento del tráfico</h4>
+      <p>Un equipo en la VLAN de invitados no puede siquiera enviar tramas a un equipo de la VLAN administrativa. La barrera es de capa 2, anterior a cualquier permiso o contraseña del sistema operativo.</p>
+    </div>
+    <div class="tarjeta">
+      <h4>Contención de incidentes</h4>
+      <p>Si un equipo se infecta con malware que se propaga por la red, su alcance queda limitado a su propia VLAN en lugar de a toda la organización.</p>
+    </div>
+    <div class="tarjeta">
+      <h4>Menos superficie de escucha</h4>
+      <p>El tráfico de difusión (ARP, DHCP, descubrimiento de servicios) no sale de la VLAN. Un atacante conectado a una toma pública ve mucha menos información sobre la red.</p>
+    </div>
+    <div class="tarjeta">
+      <h4>Punto único de control</h4>
+      <p>Como el tráfico entre VLANs debe pasar por un router o switch multicapa, ese punto se convierte en el lugar natural para aplicar listas de control de acceso y registrar lo que ocurre.</p>
+    </div>
+    <div class="tarjeta">
+      <h4>Cumplimiento normativo</h4>
+      <p>Muchas normativas exigen separar los sistemas que manejan datos sensibles del resto de la red. La VLAN es la forma estándar de acreditar esa separación.</p>
+    </div>
+    <div class="tarjeta">
+      <h4>Menor congestión</h4>
+      <p>Dominios de difusión más pequeños significan menos tramas inútiles circulando y menos carga de procesamiento en cada equipo.</p>
+    </div>
+  </div>
+
+  <h3>Un ejemplo completo de diseño</h3>
+  <p>Una escuela con un solo switch central y VLANs bien definidas puede establecer esta política:</p>
+  <div class="tabla-wrap">
+    <table>
+      <thead><tr><th>VLAN</th><th>Uso</th><th>Qué se le permite alcanzar</th></tr></thead>
+      <tbody>
+        <tr><td><code>10</code></td><td>Administración y Control Escolar</td><td>Servidores internos e Internet</td></tr>
+        <tr><td><code>20</code></td><td>Laboratorios de cómputo</td><td>Internet y servidor de prácticas; nada de administración</td></tr>
+        <tr><td><code>30</code></td><td>Wi-Fi de alumnos e invitados</td><td>Solo Internet</td></tr>
+        <tr><td><code>99</code></td><td>Gestión de los switches</td><td>Accesible únicamente desde equipos autorizados de TI</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Un alumno conectado al Wi-Fi tiene Internet y nada más, aunque intente escanear la red. Y la VLAN 99, la de gestión de los propios switches, queda fuera del alcance de cualquier usuario normal: es una práctica recomendada precisamente para que nadie pueda intentar acceder a la administración de los equipos de red desde una toma cualquiera.</p>
+
+  <div class="nota">
+    <p><strong>Advertencia honesta:</strong> las VLANs son un control de seguridad valioso, pero no infalible. Existen ataques específicos —el salto de VLAN mediante doble etiquetado, o la suplantación de un troncal aprovechando la negociación automática— que explotan configuraciones descuidadas. Por eso se recomienda desactivar la negociación dinámica de troncales, no usar la VLAN 1 para tráfico de usuarios, cambiar la VLAN nativa por una VLAN sin uso y declarar explícitamente qué VLANs se permiten en cada troncal.</p>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <h2><span class="num">06</span> Documentación oficial y recursos para profundizar</h2>
+
+  <ul class="fuentes">
+    <li>
+      <span class="org">IEEE SA</span>
+      <a href="https://standards.ieee.org/ieee/802.1Q/6844/" target="_blank" rel="noopener">IEEE 802.1Q-2018 — Bridges and Bridged Networks</a>
+      <span class="desc">Ficha oficial del estándar en IEEE Standards Association. Es la fuente normativa: define el formato de la etiqueta, el comportamiento de los VLAN Bridges y sus enmiendas.</span>
+    </li>
+    <li>
+      <span class="org">IEEE 802.1</span>
+      <a href="https://www.ieee802.org/802_tutorials/2013-03/8021-IETF-tutorial-final.pdf" target="_blank" rel="noopener">Tutorial IEEE 802.1Q — Media Access Control Bridges (PDF)</a>
+      <span class="desc">Tutorial del propio grupo de trabajo IEEE 802.1 que explica la arquitectura de puentes y la nomenclatura de etiquetas (C-tag, S-tag, B-tag) sin el lenguaje formal de la norma.</span>
+    </li>
+    <li>
+      <span class="org">Cisco</span>
+      <a href="https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9400/software/release/17-8/configuration_guide/vlan/b_178_vlan_9400_cg/configuring_vlan_trunks.html" target="_blank" rel="noopener">Configuring VLAN Trunks — VLAN Configuration Guide (Catalyst 9400)</a>
+      <span class="desc">Guía oficial de configuración de troncales: modos de puerto, VLAN nativa, lista de VLANs permitidas y el comportamiento del tráfico etiquetado y sin etiquetar.</span>
+    </li>
+    <li>
+      <span class="org">Cisco</span>
+      <a href="https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst2960x/software/15_2_6_e/configuration_guide/b_1526e_consolidated_2960x_cg/m_vlan_trunk_cg_2960-x.html" target="_blank" rel="noopener">Consolidated Platform Configuration Guide (Catalyst 2960-X)</a>
+      <span class="desc">Equivalente para la familia de switches de acceso más usada en laboratorios docentes, con ejemplos de comandos IOS listos para replicar en Packet Tracer.</span>
+    </li>
+    <li>
+      <span class="org">Cloudflare</span>
+      <a href="https://developers.cloudflare.com/magic-wan/connector/device-information" target="_blank" rel="noopener">Magic WAN Connector — VLAN ID</a>
+      <span class="desc">Documentación de Cloudflare que muestra el uso del etiquetado VLAN en un escenario actual de red definida por software: varias VLANs sobre un mismo puerto físico.</span>
+    </li>
+  </ul>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <h2><span class="num">07</span> Cuestionario de evaluación</h2>
+  <p>Diez preguntas sobre los puntos centrales del tema. Al calificar verás qué respondiste bien, la explicación de cada caso y tu resultado final.</p>
+
+  <div id="quiz">
+    <form id="formulario"></form>
+
+    <div class="acciones">
+      <button type="button" id="btn-calificar">Calificar cuestionario</button>
+      <button type="button" id="btn-reiniciar" class="secundario">Reiniciar</button>
+    </div>
+
+    <div id="resultado">
+      <p style="margin:0; font-size:.85rem; letter-spacing:.08em; text-transform:uppercase; color:var(--texto-suave)">Calificación obtenida</p>
+      <div id="calificacion">—</div>
+      <p id="detalle-resultado"></p>
+
+      <div id="envio">
+        <label for="nombre">Registra y envía tu resultado</label>
+        <div class="fila-envio" style="margin-bottom:10px">
+          <input type="text" id="nombre" placeholder="Nombre completo" autocomplete="name">
+          <input type="text" id="matricula" placeholder="Matrícula" style="flex:0 1 150px">
+        </div>
+        <div class="fila-envio">
+          <input type="email" id="correo" placeholder="nombre@ejemplo.com" autocomplete="email">
+          <button type="button" id="btn-enviar">Enviar resultado</button>
+        </div>
+        <p id="aviso-envio">Tu calificación y el detalle por pregunta se registrarán y se enviarán a esa dirección.</p>
+        <p style="margin:10px 0 0"><button type="button" id="btn-mailto" class="secundario" style="font-size:.88rem; padding:8px 14px">Abrir en mi app de correo</button></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="sitio">
+  <div class="contenedor">
+    <p><strong>VLANs — Informe técnico y material didáctico</strong></p>
+    <p>Universidad Politécnica del Estado de Guerrero · Ingeniería en Tecnologías de la Información e Innovación Digital</p>
+    <p>Elías Bahena Corral · Matrícula 25150021 · Ing. Marco Antonio Valois Flores</p>
+  </div>
+</footer>
+
+<script>
+/* =====================================================================
+   CONFIGURACIÓN DE GOOGLE FORMS
+   ---------------------------------------------------------------------
+   1. Crea el formulario en Google Forms con 7 preguntas de respuesta
+      corta, en este orden: Nombre, Matrícula, Correo, Calificación,
+      Aciertos, Porcentaje, Detalle (esta última de párrafo).
+   2. Menú ⋮ > "Obtener vínculo previamente rellenado", escribe algo en
+      cada campo, pulsa "Obtener vínculo" y copia la URL.
+   3. De esa URL toma los números entry.XXXXXXXXX y pégalos abajo.
+   4. En ACCION pega la URL del formulario cambiando /viewform por
+      /formResponse.
+   Mientras ACCION siga con el texto PEGA_AQUI, la página usará el
+   envío por app de correo como respaldo.
+   ===================================================================== */
+const GFORM = {
+  ACCION: "PEGA_AQUI_LA_URL/formResponse",
+  CAMPOS: {
+    nombre:       "entry.000000001",
+    matricula:    "entry.000000002",
+    correo:       "entry.000000003",
+    calificacion: "entry.000000004",
+    aciertos:     "entry.000000005",
+    porcentaje:   "entry.000000006",
+    detalle:      "entry.000000007"
+  }
+};
+const GFORM_LISTO = !GFORM.ACCION.includes("PEGA_AQUI");
+
+const preguntas = [
+  {
+    q: "¿Qué es exactamente una VLAN?",
+    op: [
+      "Un cable especial que separa físicamente dos redes",
+      "Un dominio de difusión independiente creado por configuración en la capa 2",
+      "Un protocolo de enrutamiento que sustituye a las direcciones IP",
+      "Un tipo de servidor que reparte direcciones de red"
+    ],
+    ok: 1,
+    exp: "Una VLAN es un dominio de difusión separado que se crea configurando el switch en la capa de enlace de datos, no tendiendo cableado adicional."
+  },
+  {
+    q: "¿Cuál es el objetivo principal de implementar VLANs?",
+    op: [
+      "Aumentar la velocidad física de los cables de red",
+      "Eliminar la necesidad de usar switches",
+      "Segmentar lógicamente el tráfico en grupos independientes sobre una misma infraestructura física",
+      "Cifrar automáticamente todo el tráfico de la red"
+    ],
+    ok: 2,
+    exp: "El propósito central es dividir una red física en varias redes lógicas separadas, agrupando equipos por función en lugar de por ubicación."
+  },
+  {
+    q: "¿Qué estándar del IEEE define el etiquetado de VLANs en redes Ethernet?",
+    op: ["IEEE 802.11", "IEEE 802.3af", "IEEE 802.1X", "IEEE 802.1Q"],
+    ok: 3,
+    exp: "IEEE 802.1Q, conocido como dot1Q, define el sistema de etiquetado de tramas y cómo los switches deben procesarlas. No confundir con 802.1X, que es control de acceso a puertos."
+  },
+  {
+    q: "¿Cuántos bytes añade la etiqueta 802.1Q a la trama Ethernet y qué valor toma el campo TPID?",
+    op: [
+      "4 bytes, con TPID = 0x8100",
+      "2 bytes, con TPID = 0x0800",
+      "8 bytes, con TPID = 0x8021",
+      "12 bytes, con TPID = 0x1Q00"
+    ],
+    ok: 0,
+    exp: "La etiqueta ocupa 4 bytes insertados tras las direcciones MAC, y el identificador de protocolo TPID toma el valor 0x8100 para señalar que la trama va etiquetada."
+  },
+  {
+    q: "El campo VID de la etiqueta tiene 12 bits. ¿Cuál es el rango de identificadores de VLAN utilizables?",
+    op: ["De 0 a 4095", "De 1 a 4094", "De 1 a 1024", "De 0 a 255"],
+    ok: 1,
+    exp: "Doce bits permiten 4096 combinaciones, pero los valores 0 y 4095 están reservados, de modo que las VLANs utilizables van de la 1 a la 4094."
+  },
+  {
+    q: "Una computadora de escritorio se conecta a un switch. ¿Qué tipo de puerto debe usarse y cómo circulan las tramas?",
+    op: [
+      "Puerto troncal, con tramas etiquetadas",
+      "Puerto troncal, con tramas sin etiquetar",
+      "Puerto de acceso, con tramas sin etiquetar",
+      "Puerto de acceso, con tramas etiquetadas"
+    ],
+    ok: 2,
+    exp: "Los dispositivos finales se conectan a puertos de acceso, que pertenecen a una sola VLAN y manejan tramas sin etiqueta: la computadora ni siquiera sabe que existen VLANs."
+  },
+  {
+    q: "¿Cuál es la función de un puerto troncal?",
+    op: [
+      "Conectar impresoras y teléfonos IP de forma prioritaria",
+      "Transportar el tráfico de múltiples VLANs sobre un solo enlace entre dispositivos de red",
+      "Bloquear todo el tráfico etiquetado por razones de seguridad",
+      "Asignar direcciones IP a los equipos de cada VLAN"
+    ],
+    ok: 1,
+    exp: "El troncal es un enlace punto a punto entre switches, routers o servidores que lleva varias VLANs por un mismo cable, distinguiéndolas por la etiqueta."
+  },
+  {
+    q: "¿Qué ocurre con el tráfico que llega sin etiqueta a un puerto troncal 802.1Q?",
+    op: [
+      "Se descarta siempre por no cumplir el estándar",
+      "Se reenvía en la VLAN nativa configurada para ese puerto",
+      "Se duplica hacia todas las VLANs permitidas",
+      "Se devuelve al remitente para que lo reenvíe etiquetado"
+    ],
+    ok: 1,
+    exp: "Un troncal acepta tráfico etiquetado y sin etiquetar; el que llega sin etiqueta se asigna a la VLAN nativa del puerto, que por omisión es la VLAN 1 y debe coincidir en ambos extremos del enlace."
+  },
+  {
+    q: "Dos equipos están en VLANs distintas del mismo switch. ¿Qué se necesita para que se comuniquen?",
+    op: [
+      "Nada, el switch los comunica automáticamente",
+      "Conectarlos con un cable cruzado entre sus puertos",
+      "Un dispositivo de capa 3 (router o switch multicapa) que haga enrutamiento entre VLANs",
+      "Asignarles la misma dirección MAC"
+    ],
+    ok: 2,
+    exp: "El switch aísla las VLANs en capa 2, así que la comunicación entre ellas exige enrutamiento en capa 3. Ese punto es además el lugar idóneo para aplicar listas de control de acceso."
+  },
+  {
+    q: "¿Cuál de estas afirmaciones sobre la seguridad de las VLANs es correcta?",
+    op: [
+      "Cifran el tráfico, por lo que sustituyen al uso de VPN",
+      "Aíslan el tráfico y contienen incidentes, pero pueden verse comprometidas por configuraciones descuidadas",
+      "Garantizan una protección absoluta contra cualquier ataque de red",
+      "Solo mejoran el rendimiento; no aportan nada en materia de seguridad"
+    ],
+    ok: 1,
+    exp: "Las VLANs limitan el alcance de un atacante o de un equipo infectado, pero no cifran nada y son vulnerables a ataques como el salto de VLAN si no se endurece la configuración."
+  }
+];
+
+const form = document.getElementById("formulario");
+const resultado = document.getElementById("resultado");
+const califEl = document.getElementById("calificacion");
+const detalleEl = document.getElementById("detalle-resultado");
+let calificado = false;
+let cuerpoCorreo = "";
+let resumen = {};
+
+function pintar(){
+  form.innerHTML = preguntas.map((p, i) => `
+    <div class="pregunta" data-i="${i}">
+      <span class="enunciado"><span class="n">${i + 1}.</span>${p.q}</span>
+      ${p.op.map((o, j) => `
+        <label class="opcion" data-j="${j}">
+          <input type="radio" name="p${i}" value="${j}"> ${o}
+        </label>`).join("")}
+      <p class="retro"></p>
+    </div>`).join("");
+}
+
+function calificar(){
+  let aciertos = 0;
+  const lineas = [];
+  let faltantes = 0;
+
+  preguntas.forEach((p, i) => {
+    const bloque = form.querySelector(`.pregunta[data-i="${i}"]`);
+    const marcada = form.querySelector(`input[name="p${i}"]:checked`);
+    const retro = bloque.querySelector(".retro");
+    const elegida = marcada ? parseInt(marcada.value, 10) : -1;
+    if (elegida === -1) faltantes++;
+
+    bloque.querySelectorAll(".opcion").forEach(lab => {
+      const j = parseInt(lab.dataset.j, 10);
+      lab.classList.remove("correcta", "incorrecta");
+      if (j === p.ok) lab.classList.add("correcta");
+      else if (j === elegida) lab.classList.add("incorrecta");
+      lab.querySelector("input").disabled = true;
+    });
+
+    const bien = elegida === p.ok;
+    if (bien) aciertos++;
+    retro.className = "retro visible";
+    retro.innerHTML = (bien
+      ? '<span class="bien">Correcto.</span> '
+      : '<span class="mal">Incorrecto.</span> Respuesta correcta: ' + p.op[p.ok] + '. ')
+      + p.exp;
+
+    lineas.push(`${i + 1}. ${bien ? "Correcta" : "Incorrecta"} — ${p.q}\n   Tu respuesta: ${elegida === -1 ? "(sin responder)" : p.op[elegida]}\n   Respuesta correcta: ${p.op[p.ok]}`);
+  });
+
+  const total = preguntas.length;
+  const pct = Math.round((aciertos / total) * 100);
+  const sobre10 = (aciertos / total * 10).toFixed(1);
+
+  califEl.textContent = sobre10 + " / 10";
+  let juicio;
+  if (pct >= 90) juicio = "Dominio sólido del tema.";
+  else if (pct >= 70) juicio = "Buen manejo general; repasa los puntos fallados.";
+  else if (pct >= 50) juicio = "Bases correctas, conviene releer las secciones 3 y 4.";
+  else juicio = "Vale la pena volver al informe desde el inicio antes de reintentar.";
+  detalleEl.textContent = `${aciertos} de ${total} respuestas correctas (${pct}%). ${juicio}`
+    + (faltantes ? ` Dejaste ${faltantes} pregunta(s) sin responder.` : "");
+
+  cuerpoCorreo =
+    `Resultado del cuestionario sobre VLANs (IEEE 802.1Q)\n` +
+    `Fecha: ${new Date().toLocaleString("es-MX")}\n\n` +
+    `CALIFICACIÓN: ${sobre10} / 10\n` +
+    `Aciertos: ${aciertos} de ${total} (${pct}%)\n` +
+    `${juicio}\n\n` +
+    `DETALLE POR PREGUNTA\n--------------------\n` +
+    lineas.join("\n\n") +
+    `\n\n--\nMaterial: informe técnico sobre VLANs — UPEGro, Ingeniería en Tecnologías de la Información e Innovación Digital.`;
+
+  resumen = { calificacion: sobre10 + " / 10", aciertos: aciertos + " de " + total, porcentaje: pct + "%" };
+
+  calificado = true;
+  resultado.classList.add("visible");
+  resultado.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function reiniciar(){
+  pintar();
+  calificado = false;
+  cuerpoCorreo = "";
+  resultado.classList.remove("visible");
+  ["correo","nombre","matricula"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("quiz").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+document.getElementById("btn-calificar").addEventListener("click", calificar);
+document.getElementById("btn-reiniciar").addEventListener("click", reiniciar);
+
+const aviso = document.getElementById("aviso-envio");
+
+function validar(){
+  if (!calificado){
+    aviso.textContent = "Primero califica el cuestionario.";
+    return null;
+  }
+  const datos = {
+    nombre: document.getElementById("nombre").value.trim(),
+    matricula: document.getElementById("matricula").value.trim(),
+    correo: document.getElementById("correo").value.trim()
+  };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.correo)){
+    aviso.textContent = "Escribe una dirección de correo válida, por ejemplo nombre@ejemplo.com.";
+    return null;
+  }
+  return datos;
+}
+
+function abrirCorreo(correo){
+  const asunto = "Resultado del cuestionario sobre VLANs (IEEE 802.1Q)";
+  window.location.href = "mailto:" + encodeURIComponent(correo)
+    + "?subject=" + encodeURIComponent(asunto)
+    + "&body=" + encodeURIComponent(cuerpoCorreo);
+}
+
+document.getElementById("btn-enviar").addEventListener("click", async () => {
+  const datos = validar();
+  if (!datos) return;
+
+  if (!GFORM_LISTO){
+    abrirCorreo(datos.correo);
+    aviso.textContent = "Aún no se ha configurado el formulario de Google, así que se abrió tu app de correo con el resultado.";
+    return;
+  }
+
+  const cuerpo = new URLSearchParams();
+  cuerpo.append(GFORM.CAMPOS.nombre, datos.nombre);
+  cuerpo.append(GFORM.CAMPOS.matricula, datos.matricula);
+  cuerpo.append(GFORM.CAMPOS.correo, datos.correo);
+  cuerpo.append(GFORM.CAMPOS.calificacion, resumen.calificacion);
+  cuerpo.append(GFORM.CAMPOS.aciertos, resumen.aciertos);
+  cuerpo.append(GFORM.CAMPOS.porcentaje, resumen.porcentaje);
+  cuerpo.append(GFORM.CAMPOS.detalle, cuerpoCorreo);
+
+  aviso.textContent = "Enviando…";
+  try {
+    await fetch(GFORM.ACCION, { method: "POST", mode: "no-cors", body: cuerpo });
+    aviso.textContent = "Resultado registrado. Recibirás la copia en " + datos.correo + " en unos momentos.";
+  } catch (e){
+    abrirCorreo(datos.correo);
+    aviso.textContent = "No se pudo registrar automáticamente (revisa tu conexión). Se abrió tu app de correo como alternativa.";
+  }
+});
+
+document.getElementById("btn-mailto").addEventListener("click", () => {
+  const datos = validar();
+  if (!datos) return;
+  abrirCorreo(datos.correo);
+  aviso.textContent = "Se abrió tu aplicación de correo con el mensaje listo para enviar.";
+});
+
+pintar();
+</script>
+</body>
+</html>
